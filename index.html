@@ -1,0 +1,1524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manjappai Grocery</title>
+    <meta name="description" content="Fast grocery delivery service">
+    <meta name="theme-color" content="#FFD700">
+     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <link rel="manifest" href="/manifest.json">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        html{
+            overflow-y: scroll;
+            height: 100;
+        }
+         body {
+            position: relative;
+            overflow-x: hidden; /* Prevent horizontal scroll */
+            overflow-y: scroll; /* Enable vertical scroll */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            width: 100vw; /* Ensure body takes full viewport width */
+        }
+         html, body {
+            overflow-x: hidden;
+            width: 100%;
+            position: relative;
+        }
+        
+        body {
+            position: relative;
+            overflow-y: auto;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Container for main content that will scroll */
+       #app-content {
+            width: 100%;
+            min-height: 100vh; /* Ensure it fills viewport */
+            overflow: visible; /* Allow content to flow vertically */
+        }
+        
+        /* Prevent text selection on all elements except inputs */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        html, body {
+            overflow-x: hidden;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            overscroll-behavior-y: contain;
+        }
+        
+        body {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Prevent text selection on all elements */
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+        
+        /* Allow text selection only in input fields and textareas */
+        input, textarea {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
+        :root {
+            --primary-color: #FFD700;
+            --primary-dark: #FFC000;
+            --text-color: #333;
+            --text-light: #666;
+            --bg-color: #fff;
+            --card-color: #fff;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0,0,0,0.1);
+            --radius: 8px;
+        }
+
+        [data-theme="dark"] {
+            --primary-color: #FFD700;
+            --primary-dark: #FFC000;
+            --text-color: #f5f5f5;
+            --text-light: #ccc;
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --border-color: #333;
+            --shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--primary-color);
+            color: #333;
+            padding: 15px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            color: #333;
+        }
+
+        .nav-icons {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-icons i {
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: #333;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -300px;
+            width: 300px;
+            height: 100vh;
+            background-color: var(--card-color);
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 1001;
+            transition: left 0.3s;
+            overflow-y: auto;
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .user-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 1.5rem;
+            margin-right: 15px;
+        }
+
+        .user-info h3 {
+            margin-bottom: 5px;
+        }
+
+        .user-info p {
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        .sidebar-menu {
+            list-style: none;
+        }
+
+        .sidebar-menu li {
+            margin-bottom: 15px;
+        }
+
+        .sidebar-menu a {
+            display: flex;
+            align-items: center;
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 10px;
+            border-radius: var(--radius);
+        }
+
+        .sidebar-menu a:hover {
+            background-color: rgba(0,0,0,0.05);
+        }
+
+        .sidebar-menu i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            margin-top: 20px;
+        }
+
+        /* Overlay */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+
+        /* Announcement Bar */
+        .announcement-bar {
+            background-color: var(--primary-dark);
+            color: #333;
+            padding: 8px 0;
+            font-size: 0.9rem;
+        }
+
+        .marquee {
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+            animation: scroll 20s linear infinite;
+        }
+
+        @keyframes scroll {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
+
+        /* Main Content */
+        .main {
+            padding: 20px 0;
+        }
+
+        .section-title {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-title h2 {
+            font-size: 1.3rem;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-color);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        /* Location Section */
+        .location-section {
+            margin-bottom: 20px;
+        }
+
+        .location-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .location-icon {
+            background-color: var(--primary-dark);
+            color: #333;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input, textarea, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            background-color: var(--card-color);
+            color: var(--text-color);
+            font-family: 'Poppins', sans-serif;
+        }
+
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            border-radius: var(--radius);
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 500;
+        }
+
+        .btn-block {
+            display: block;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .location-confirmation {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: rgba(255, 215, 0, 0.2);
+            border: 1px solid var(--primary-color);
+            border-radius: var(--radius);
+            display: none;
+        }
+
+        .location-confirmation.active {
+            display: block;
+        }
+
+        /* Grocery List */
+        .grocery-section {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            display: flex;
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            flex: 1;
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .input-group button {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+            width: auto;
+        }
+
+        .grocery-list {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .grocery-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .grocery-item:last-child {
+            border-bottom: none;
+        }
+
+        .delete-btn {
+            color: #f44336;
+            cursor: pointer;
+        }
+
+        /* Help Section in Sidebar */
+        .help-section {
+            padding: 15px;
+            margin-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .help-section h3 {
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+        }
+
+        .contact-info {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .contact-info i {
+            margin-right: 10px;
+            color: var(--primary-dark);
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Profile Section in Sidebar */
+        .profile-section {
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        /* Install Button */
+        .install-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: var(--primary-color);
+            color: #333;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            z-index: 999;
+            display: none;
+        }
+
+        .install-btn:hover {
+            background-color: var(--primary-dark);
+        }
+
+        /* Dark mode toggle */
+        .theme-toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+        }
+
+        .theme-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .slider i {
+            position: absolute;
+            font-size: 12px;
+            top: 6px;
+        }
+
+        .slider .sun {
+            left: 6px;
+            color: #333;
+            opacity: 0;
+        }
+
+        .slider .moon {
+            right: 6px;
+            color: #333;
+        }
+
+        input:checked + .slider .sun {
+            opacity: 1;
+        }
+
+        input:checked + .slider .moon {
+            opacity: 0;
+        }
+  /* Banner Section */
+.banner-container {
+    position: relative;
+    width: 100%;
+    margin: 15px 0;
+    overflow: hidden;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    height: 0;
+    padding-bottom: 25%; /* This controls the aspect ratio (4:1) */
+}
+
+.banner-slide {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: none;
+    transition: opacity 0.5s ease;
+}
+
+.banner-slide.active {
+    display: block;
+}
+
+.banner-slide img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures images cover the area without stretching */
+    display: block;
+}
+
+/* Keep the rest of your existing banner styles */
+.banner-controls {
+    position: absolute;
+    top: 50%;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    transform: translateY(-50%);
+    padding: 0 10px;
+}
+
+.banner-controls button {
+    background-color: rgba(255, 255, 255, 0.7);
+    color: var(--primary-dark);
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.banner-controls button:hover {
+    background-color: white;
+}
+
+.banner-indicators {
+    position: absolute;
+    bottom: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+}
+
+.banner-indicators .indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+}
+
+.banner-indicators .indicator.active {
+    background-color: white;
+}
+
+/* Responsive height adjustments */
+@media (max-width: 1200px) {
+    .banner-container {
+        padding-bottom: 30%; /* Taller on medium screens */
+    }
+}
+
+@media (max-width: 768px) {
+    .banner-container {
+        padding-bottom: 40%; /* Even taller on small screens */
+    }
+    
+    .banner-controls button {
+        width: 30px;
+        height: 30px;
+        font-size: 1rem;
+    }
+    
+    .banner-indicators .indicator {
+        width: 10px;
+        height: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .banner-container {
+        padding-bottom: 70%; /* Tallest on mobile */
+    }
+}
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.2rem;
+            }
+        }
+         /* Base styles */
+       
+        /* Menu/Sidebar specific fixes */
+        .sidebar {
+            z-index: 1001; /* Ensure it's above other elements */
+            touch-action: auto; /* Allow touch events on sidebar */
+        }
+        
+        .overlay {
+            z-index: 1000;
+            touch-action: auto; /* Allow touch events on overlay */
+        } 
+    </style>
+</head>
+<body>
+    <!-- Overlay -->
+    <div class="overlay"></div>
+
+    <!-- Install Button -->
+    <button class="install-btn" id="installBtn" title="Install App">
+        <i class="fas fa-download"></i>
+    </button>
+
+    <!-- Sidebar -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h3>Menu</h3>
+            <i class="fas fa-times" id="closeSidebar"></i>
+        </div>
+        <div class="sidebar-content">
+            <div class="user-profile">
+                <div class="user-avatar" id="userAvatar">U</div>
+                <div class="user-info">
+                    <h3 id="userName">Guest User</h3>
+                    <p id="userPhone">+91 9876543210</p>
+                </div>
+            </div>
+            <ul class="sidebar-menu">
+                <li><a href="#" class="menu-link" data-page="home"><i class="fas fa-home"></i> Home</a></li>
+            </ul>
+
+            <!-- Profile Section in Sidebar -->
+            <div class="profile-section">
+                <h3>My Profile</h3>
+                <div class="form-group">
+                    <label for="editName">Full Name</label>
+                    <input type="text" id="editName" placeholder="Enter your full name">
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Phone Number</label>
+                    <input type="tel" id="editPhone" placeholder="Enter your phone number">
+                </div>
+                <button class="btn btn-block" id="saveProfileBtn">Save Changes</button>
+            </div>
+
+            <!-- Help Section in Sidebar -->
+            <div class="help-section">
+                <h3>Help & Contact</h3>
+                <div class="contact-info">
+                    <i class="fas fa-phone"></i>
+                    <span>+91 6369943428</span>
+                </div>
+                <div class="contact-info">
+                    <i class="fas fa-envelope"></i>
+                    <span>manjappaiofficial@gmail.com</span>
+                </div>
+                <div class="contact-info">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Palacode, Dharmapur</span>
+                </div>
+                
+                <h3 style="margin-top: 15px;">Store Hours</h3>
+                <p>Monday - Saturday: 8:00 AM - 10:00 PM</p>
+                <p>Sunday: 9:00 AM - 10:00 PM</p>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="form-group">
+                    <label>Theme</label>
+                    <label class="theme-toggle">
+                        <input type="checkbox" id="themeToggle">
+                        <span class="slider">
+                            <i class="fas fa-sun sun"></i>
+                            <i class="fas fa-moon moon"></i>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="app-content">
+        <header>
+            <div class="container header-content">
+                <div class="logo">
+                    <i class="fas fa-shopping-basket"></i>
+                    <span>Manjappai Grocery</span>
+                </div>
+                <div class="nav-icons">
+                    <i class="fas fa-bars" id="openSidebar"></i>
+                </div>
+            </div>
+        </header>
+
+        <div class="announcement-bar">
+            <div class="container">
+                <div class="marquee">
+                    ✦ Grant Open || Want something for your cooking, We heard you. ✦ Enter your Grocery list we delivery at your door step. ✦
+                </div>
+            </div>
+        </div>
+        <!-- Banner Section -->
+<div class="banner-container">
+    <div class="banner-slide active">
+        <img src="banner images/banner 1.jpg" alt="Special Offer">
+    </div>
+    <div class="banner-slide">
+        <img src="banner images/banner 2.jpg" alt="New Arrivals">
+    </div>
+    <div class="banner-slide">
+        <img src="banner images/banner 1.jpg" alt="Free Delivery">
+    </div>
+    <div class="banner-controls">
+        <button class="banner-prev"><i class="fas fa-chevron-left"></i></button>
+        <button class="banner-next"><i class="fas fa-chevron-right"></i></button>
+    </div>
+    <div class="banner-indicators">
+        <span class="indicator active"></span>
+        <span class="indicator"></span>
+        <span class="indicator"></span>
+    </div>
+</div>
+
+        <main class="main">
+            <div class="container">
+                <!-- Location Section -->
+                <div class="location-section">
+                    <div class="card">
+                        <div class="location-header">
+                            <div class="location-icon">
+                                <i class="fas fa-map-marker-alt"></i>
+                            </div>
+                            <h2>Delivery Address</h2>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="deliveryAddress">Full Delivery Address</label>
+                            <textarea id="deliveryAddress" placeholder="House number, street, landmark, area, city, PIN code"></textarea>
+                        </div>
+                        <button class="btn btn-block" id="manualLocationBtn">Confirm Address</button>
+                        <div class="location-confirmation" id="manualLocationConfirmation">
+                            <p><strong>Address confirmed!</strong></p>
+                            <p id="confirmedAddress"></p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="customer-info">
+                    <div class="card">
+                        <h2>Your Information</h2>
+                        <div class="form-group">
+                            <label for="customerName">Full Name</label>
+                            <input type="text" id="customerName" placeholder="Enter your full name">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerPhone">Phone Number</label>
+                            <input type="tel" id="customerPhone" placeholder="Enter your phone number">
+                        </div>
+                        <div class="form-group">
+                            <label for="customerNotes">Delivery Notes (Optional)</label>
+                            <textarea id="customerNotes" placeholder="Any special instructions for delivery"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Grocery List -->
+                <div class="grocery-section">
+                    <div class="card">
+                        <h2>Your Grocery List</h2>
+                        <div class="input-group">
+                            <input type="text" id="itemInput" placeholder="e.g., Egg x5, Shampoo pocket small x2">
+                            <button class="btn" id="addBtn">Add</button>
+                        </div>
+                        <ul class="grocery-list" id="groceryList"></ul>
+                        <button class="btn btn-block" id="deliverBtn">
+                            <i class="fas fa-truck"></i> Request Delivery
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const openSidebarBtn = document.getElementById('openSidebar');
+        const closeSidebarBtn = document.getElementById('closeSidebar');
+        const overlay = document.querySelector('.overlay');
+        const themeToggle = document.getElementById('themeToggle');
+        const installBtn = document.getElementById('installBtn');
+        
+        // Location Elements
+        const deliveryAddress = document.getElementById('deliveryAddress');
+        const manualLocationBtn = document.getElementById('manualLocationBtn');
+        const manualLocationConfirmation = document.getElementById('manualLocationConfirmation');
+        const confirmedAddress = document.getElementById('confirmedAddress');
+        
+        // Grocery List Elements
+        const itemInput = document.getElementById('itemInput');
+        const addBtn = document.getElementById('addBtn');
+        const groceryList = document.getElementById('groceryList');
+        const deliverBtn = document.getElementById('deliverBtn');
+        
+        // Profile Elements
+        const editName = document.getElementById('editName');
+        const editPhone = document.getElementById('editPhone');
+        const saveProfileBtn = document.getElementById('saveProfileBtn');
+        const userName = document.getElementById('userName');
+        const userPhone = document.getElementById('userPhone');
+        const userAvatar = document.getElementById('userAvatar');
+        
+        // App State
+        let items = JSON.parse(localStorage.getItem('groceryItems')) || [];
+        let customerData = JSON.parse(localStorage.getItem('customerData')) || {};
+        let deferredPrompt;
+
+        // Initialize Firebase
+const firebaseConfig = {
+  apiKey: "AIzaSyBtDYsqrcWw247W8TxnF8pX2tFgXJaxpVI",
+  authDomain: "manjappai-grocery.firebaseapp.com",
+  projectId: "manjappai-grocery",
+  storageBucket: "manjappai-grocery.appspot.com",
+  messagingSenderId: "631320293259",
+  appId: "1:631320293259:web:d820717e5a4f9dfce5098e",
+  measurementId: "G-MHYJ15DX4B"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+        // Initialize the app
+        function initApp() {
+            // Check for saved theme preference
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.checked = true;
+            }
+            
+            // Load customer data
+            if (customerData.name) {
+                document.getElementById('customerName').value = customerData.name;
+                editName.value = customerData.name;
+                userName.textContent = customerData.name;
+                userAvatar.textContent = customerData.name.charAt(0).toUpperCase();
+            }
+            if (customerData.phone) {
+                document.getElementById('customerPhone').value = customerData.phone;
+                editPhone.value = customerData.phone;
+                userPhone.textContent = customerData.phone;
+            }
+            if (customerData.address) {
+                deliveryAddress.value = customerData.address;
+                confirmedAddress.textContent = customerData.address;
+                manualLocationConfirmation.classList.add('active');
+            }
+            if (customerData.notes) {
+                document.getElementById('customerNotes').value = customerData.notes;
+            }
+            
+            // Render grocery list
+            renderList();
+        }
+        
+        // Sidebar functionality
+        function setupSidebar() {
+            openSidebarBtn.addEventListener('click', openSidebar);
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+        }
+        
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+        }
+        
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+        }
+        
+        // Theme toggle
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Confirm manual address
+        manualLocationBtn.addEventListener('click', () => {
+            const address = deliveryAddress.value.trim();
+            if (!address) {
+                alert('Please enter your full delivery address');
+                return;
+            }
+            
+            confirmedAddress.textContent = address;
+            manualLocationConfirmation.classList.add('active');
+            
+            // Save customer data
+            async function saveCustomerData() {
+    const name = document.getElementById('customerName').value.trim();
+    const phone = document.getElementById('customerPhone').value.trim();
+    const address = deliveryAddress.value.trim();
+    const notes = document.getElementById('customerNotes').value.trim();
+    
+    // Create customer data object for localStorage
+    const customerData = {
+        name: name,
+        phone: phone,
+        address: address,
+        notes: notes,
+        timestamp: new Date().toISOString()
+    };
+    
+    // Update user info in sidebar if name changed
+    if (customerData.name) {
+        userName.textContent = customerData.name;
+        userAvatar.textContent = customerData.name.charAt(0).toUpperCase();
+    }
+    if (customerData.phone) {
+        userPhone.textContent = customerData.phone;
+    }
+    
+    // Save complete data to localStorage
+    localStorage.setItem('customerData', JSON.stringify(customerData));
+    
+    // Save ONLY name and phone to Firestore
+    if (name && phone) {
+        try {
+            // Generate a unique ID based on phone number
+            const userId = phone.replace(/\D/g, ''); // Remove non-digit characters
+            
+            await db.collection('users').doc(userId).set({
+                name: name,
+                phone: phone,
+                lastUpdated: new Date()
+            }, { merge: true });
+            
+            console.log('User data saved to Firestore');
+        } catch (error) {
+            console.error('Error saving user data:', error);
+        }
+    }
+}
+        });
+        
+        // Render grocery list
+        function renderList() {
+            groceryList.innerHTML = '';
+            
+            if (items.length === 0) {
+                const li = document.createElement('li');
+                li.className = 'grocery-item';
+                li.textContent = 'Your grocery list is empty. Add items above.';
+                li.style.color = 'var(--text-light)';
+                li.style.textAlign = 'center';
+                li.style.fontStyle = 'italic';
+                groceryList.appendChild(li);
+                return;
+            }
+            
+            items.forEach((item, index) => {
+                const li = document.createElement('li');
+                li.className = 'grocery-item';
+                li.innerHTML = `
+                    <span>${item}</span>
+                    <span class="delete-btn" data-index="${index}"><i class="fas fa-trash"></i></span>
+                `;
+                groceryList.appendChild(li);
+            });
+            
+            // Add event listeners to delete buttons
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const index = e.currentTarget.dataset.index;
+                    items.splice(index, 1);
+                    localStorage.setItem('groceryItems', JSON.stringify(items));
+                    renderList();
+                });
+            });
+        }
+        
+        // Add item to list
+        addBtn.addEventListener('click', () => {
+            const item = itemInput.value.trim();
+            if (item) {
+                items.push(item);
+                localStorage.setItem('groceryItems', JSON.stringify(items));
+                itemInput.value = '';
+                renderList();
+            }
+        });
+        
+        // Handle Enter key
+        itemInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                addBtn.click();
+            }
+        });
+        
+        // Save customer data
+        function saveCustomerData() {
+            customerData = {
+                name: document.getElementById('customerName').value.trim(),
+                phone: document.getElementById('customerPhone').value.trim(),
+                address: deliveryAddress.value.trim(),
+                notes: document.getElementById('customerNotes').value.trim(),
+                timestamp: new Date().toISOString()
+            };
+            
+            // Update user info in sidebar if name changed
+            if (customerData.name) {
+                userName.textContent = customerData.name;
+                userAvatar.textContent = customerData.name.charAt(0).toUpperCase();
+            }
+            if (customerData.phone) {
+                userPhone.textContent = customerData.phone;
+            }
+            
+            localStorage.setItem('customerData', JSON.stringify(customerData));
+        }
+        
+        // Save profile data
+       
+        saveProfileBtn.addEventListener('click', async () => {
+    const name = editName.value.trim();
+    const phone = editPhone.value.trim();
+    
+    if (!name || !phone) {
+        alert('Please enter both name and phone number');
+        return;
+    }
+    
+    // Update profile data
+    const customerData = JSON.parse(localStorage.getItem('customerData')) || {};
+    customerData.name = name;
+    customerData.phone = phone;
+    
+    // Save to localStorage
+    localStorage.setItem('customerData', JSON.stringify(customerData));
+    
+    // Save ONLY name and phone to Firestore
+    try {
+        const userId = phone.replace(/\D/g, ''); // Use phone number as document ID
+        
+        await db.collection('users').doc(userId).set({
+            name: name,
+            phone: phone,
+            lastUpdated: new Date()
+        }, { merge: true });
+        
+        console.log('Profile updated in Firestore');
+    } catch (error) {
+        console.error('Error updating profile:', error);
+    }
+    
+    // Update UI
+    userName.textContent = name;
+    userPhone.textContent = phone;
+    userAvatar.textContent = name.charAt(0).toUpperCase();
+    document.getElementById('customerName').value = name;
+    document.getElementById('customerPhone').value = phone;
+    
+    alert('Profile updated successfully!');
+    closeSidebar();
+});
+        // Save customer data when fields change
+        document.getElementById('customerName').addEventListener('change', saveCustomerData);
+        document.getElementById('customerPhone').addEventListener('change', saveCustomerData);
+        deliveryAddress.addEventListener('change', saveCustomerData);
+        document.getElementById('customerNotes').addEventListener('change', saveCustomerData);
+        
+        // Request delivery
+        deliverBtn.addEventListener('click', () => {
+            // Validate form
+            if (!customerData.name) {
+                alert('Please enter your name');
+                document.getElementById('customerName').focus();
+                return;
+            }
+            
+            if (!customerData.phone) {
+                alert('Please enter your phone number');
+                document.getElementById('customerPhone').focus();
+                return;
+            }
+            
+            if (!customerData.address) {
+                alert('Please enter your delivery address');
+                deliveryAddress.focus();
+                return;
+            }
+            
+            if (items.length === 0) {
+                alert('Please add items to your grocery list first.');
+                itemInput.focus();
+                return;
+            }
+            
+            // Save customer data
+            saveCustomerData();
+            
+            // Save to database (simplified for this example)
+            saveOrderToDatabase();
+            
+            // Send to WhatsApp
+            sendToWhatsApp();
+        });
+        
+        // Simulate database save
+        function saveOrderToDatabase() {
+            const order = {
+                customer: customerData,
+                items: items,
+                timestamp: new Date().toISOString()
+            };
+            
+            // In a real app, you would send this to your backend
+            console.log('Saving to database:', order);
+            localStorage.setItem('lastOrder', JSON.stringify(order));
+        }
+        
+        // Send to WhatsApp
+        function sendToWhatsApp() {
+            const phoneNumber = "7094717117"; // Replace with your number
+            
+            // Create order summary
+            let message = `*NEW GROCERY ORDER - Manjappai Grocery*\n\n`;
+            message += `*Customer:* ${customerData.name}\n`;
+            message += `*Phone:* ${customerData.phone}\n\n`;
+            message += `*Delivery Address:*\n${customerData.address}\n\n`;
+            
+            if (customerData.notes) {
+                message += `*Delivery Notes:*\n${customerData.notes}\n\n`;
+            }
+            
+            message += `*Order Items:*\n`;
+            message += items.map((item, index) => `${index + 1}. ${item}`).join('\n');
+            message += `\n\n*Total Items:* ${items.length}\n`;
+            message += `*Order Time:* ${new Date().toLocaleString()}`;
+            
+            const encodedMessage = encodeURIComponent(message);
+            const whatsappUrl = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+            
+            // Open WhatsApp
+            window.open(whatsappUrl, '_blank');
+            
+            // Clear the list after order (but keep customer data)
+            items = [];
+            localStorage.setItem('groceryItems', JSON.stringify(items));
+            renderList();
+            
+            // Show confirmation
+            alert('Your order has been submitted! You will now be redirected to WhatsApp to confirm.');
+        }
+        
+        // PWA Installation
+        function setupPWA() {
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Prevent the mini-infobar from appearing on mobile
+                e.preventDefault();
+                // Stash the event so it can be triggered later
+                deferredPrompt = e;
+                // Show the install button
+                installBtn.style.display = 'flex';
+            });
+            
+            installBtn.addEventListener('click', async () => {
+                if (!deferredPrompt) return;
+                // Show the install prompt
+                deferredPrompt.prompt();
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                // Optionally, send analytics event with outcome of user choice
+                console.log(`User response to the install prompt: ${outcome}`);
+                // We've used the prompt, and can't use it again, throw it away
+                deferredPrompt = null;
+                // Hide the install button
+                installBtn.style.display = 'none';
+            });
+            
+            window.addEventListener('appinstalled', () => {
+                // Hide the install button
+                installBtn.style.display = 'none';
+                // Clear the deferredPrompt so it can be garbage collected
+                deferredPrompt = null;
+                console.log('PWA was installed');
+            });
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initApp();
+            setupSidebar();
+            setupPWA();
+        });
+        
+        // Register service worker for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(registration => {
+                    console.log('ServiceWorker registration successful');
+                }).catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+            });
+        }
+        // Banner Carousel Functionality
+let currentBannerSlide = 0;
+const bannerSlides = document.querySelectorAll('.banner-slide');
+const bannerIndicators = document.querySelectorAll('.banner-indicators .indicator');
+
+function showBannerSlide(index) {
+    bannerSlides.forEach(slide => slide.classList.remove('active'));
+    bannerIndicators.forEach(indicator => indicator.classList.remove('active'));
+    
+    currentBannerSlide = (index + bannerSlides.length) % bannerSlides.length;
+    bannerSlides[currentBannerSlide].classList.add('active');
+    bannerIndicators[currentBannerSlide].classList.add('active');
+}
+
+function nextBannerSlide() {
+    showBannerSlide(currentBannerSlide + 1);
+}
+
+function prevBannerSlide() {
+    showBannerSlide(currentBannerSlide - 1);
+}
+
+// Auto-rotate banners
+let bannerInterval = setInterval(nextBannerSlide, 5000);
+
+// Pause on hover
+const bannerContainer = document.querySelector('.banner-container');
+bannerContainer.addEventListener('mouseenter', () => {
+    clearInterval(bannerInterval);
+});
+
+bannerContainer.addEventListener('mouseleave', () => {
+    bannerInterval = setInterval(nextBannerSlide, 5000);
+});
+
+// Manual controls
+document.querySelector('.banner-next').addEventListener('click', () => {
+    nextBannerSlide();
+    clearInterval(bannerInterval);
+    bannerInterval = setInterval(nextBannerSlide, 5000);
+});
+
+document.querySelector('.banner-prev').addEventListener('click', () => {
+    prevBannerSlide();
+    clearInterval(bannerInterval);
+    bannerInterval = setInterval(nextBannerSlide, 5000);
+});
+
+// Indicator clicks
+bannerIndicators.forEach((indicator, index) => {
+    indicator.addEventListener('click', () => {
+        showBannerSlide(index);
+        clearInterval(bannerInterval);
+        bannerInterval = setInterval(nextBannerSlide, 5000);
+    });
+});
+
+// Add these JavaScript functions to prevent default behaviors
+        document.addEventListener('DOMContentLoaded', function() {
+            // Prevent context menu (long press) on mobile
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+            });
+            
+            // Prevent text selection
+            document.addEventListener('selectstart', function(e) {
+                e.preventDefault();
+            });
+            
+            // Prevent zooming with double-tap
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+               // Prevent elastic overscroll (bounce effect)
+       
+           
+            
+       
+        // Modified event listeners to not interfere with menu
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize your app
+           async function initApp() {
+    // Check for saved theme preference
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        themeToggle.checked = true;
+    }
+    
+    // Load customer data from localStorage
+    let customerData = JSON.parse(localStorage.getItem('customerData')) || {};
+    
+    // Update UI with loaded data
+    if (customerData.name) {
+        document.getElementById('customerName').value = customerData.name;
+        editName.value = customerData.name;
+        userName.textContent = customerData.name;
+        userAvatar.textContent = customerData.name.charAt(0).toUpperCase();
+    }
+    if (customerData.phone) {
+        document.getElementById('customerPhone').value = customerData.phone;
+        editPhone.value = customerData.phone;
+        userPhone.textContent = customerData.phone;
+    }
+    if (customerData.address) {
+        deliveryAddress.value = customerData.address;
+        confirmedAddress.textContent = customerData.address;
+        manualLocationConfirmation.classList.add('active');
+    }
+    if (customerData.notes) {
+        document.getElementById('customerNotes').value = customerData.notes;
+    }
+    
+    // Render grocery list
+    renderList();
+}
+            // Only prevent default behavior for non-interactive elements
+            document.addEventListener('touchmove', function(e) {
+                const interactiveElements = [
+                    'input', 'textarea', 'select', 'button',
+                    'a', '[role=button]', '.sidebar', '.overlay',
+                    '#openSidebar', '#closeSidebar'
+                ];
+                
+                if (!e.target.matches(interactiveElements.join(','))) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+            
+            // Prevent zoom on double-tap (but allow on inputs)
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(event) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300 && !event.target.matches('input, textarea')) {
+                    event.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+            
+            // Prevent context menu except on inputs
+            document.addEventListener('contextmenu', function(e) {
+                if (!e.target.matches('input, textarea, [contenteditable="true"]')) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        // Your existing menu/sidebar functions with modifications
+        function setupSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const openSidebarBtn = document.getElementById('openSidebar');
+            const closeSidebarBtn = document.getElementById('closeSidebar');
+            const overlay = document.querySelector('.overlay');
+            
+            function openSidebar() {
+                sidebar.classList.add('open');
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden'; // Prevent body scrolling when sidebar is open
+            }
+            
+            function closeSidebar() {
+                sidebar.classList.remove('open');
+                overlay.classList.remove('active');
+                document.body.style.overflow = ''; // Re-enable body scrolling
+            }
+            
+            openSidebarBtn.addEventListener('click', openSidebar);
+            closeSidebarBtn.addEventListener('click', closeSidebar);
+            overlay.addEventListener('click', closeSidebar);
+            
+            // Make sure touch events work on menu items
+            document.querySelectorAll('.sidebar-menu a').forEach(item => {
+                item.style.touchAction = 'auto';
+            });
+        }
+            
+           
+            
+            // Initialize the rest of your app
+            initApp();
+            setupSidebar();
+            setupPWA();
+        });
+        
+    </script>
+</body>
+</html>
